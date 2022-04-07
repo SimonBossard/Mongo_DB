@@ -1,0 +1,18 @@
+
+```{r}
+.libPaths("D:/R/Library")
+library(mongolite)
+library(glue)
+```
+
+```{r}
+url1="mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/food"
+coll<-mongo("doctolib",url=url1,options = ssl_options(allow_invalid_hostname=TRUE, weak_cert_validation=TRUE))
+```
+
+Vous devrez pour cette première visualisation générer une carte 
+des centres de vaccination situés à moins de 50km de Rennes
+
+```{r}
+print(coll$find(query = '{"name": {"$regex": "^A", "$options":"i"}, "borough":"Manhattan"}',fields = '{"name": true}')[1,])
+```
