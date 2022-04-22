@@ -1,28 +1,133 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 
-```{r}
-.libPaths("D:/R/Library")
+```{r include=FALSE}
 library(mongolite)
 library(glue)
+library(jsonlite)
+library(memisc)
+library(ggplot2)
+library(ggmap)
+library(sf)
+library(tidyverse)
+library(leaflet)
+library(leaflet.providers)
 ```
 
-```{r}
-url1="mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/food"
-coll<-mongo("doctolib",url=url1,options = ssl_options(allow_invalid_hostname=TRUE, weak_cert_validation=TRUE))
+```{r include=FALSE}
+url1="mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/doctolib"
+coll<-mongo("dump_Jan2022",url=url1,options = ssl_options(allow_invalid_hostname=TRUE, weak_cert_validation=TRUE))
 ```
 
-Vous devrez pour cette première visualisation générer une carte 
-des centres de vaccination situés à moins de 50km de Rennes
 
-```{r}
-print(coll$find(query = '{"name": {"$regex": "^A", "$options":"i"}, "borough":"Manhattan"}',fields = '{"name": true}')[1,])
+## Carte des centres de vaccination à moins de 50km de Rennes
+
+
+```{r include=FALSE}
+docto<-coll$find(query = '{"location" : {"$near" : {"$geometry" :  {"type": "Point","coordinates": [-1.6777,48.117266]},"$maxDistance":50000}},"$nor": [{ "visit_motives": {"$size": 0}},
+                       {"visit_motives": {"$exists": false}}]}',fields='{"_id":true,"name":true,"url_doctolib":true,"location":true,"visit_motives":true}')
+longlat<-as.character(docto[,4][,2])
+docto["lat"]<-substr(longlat,3,10)
+docto["long"]<-substr(longlat,13,18)
+docto
 ```
+
+```{r include=FALSE}
+docto2<-coll$aggregate('[
+                        {"$unwind":"$visit_motives"},
+                        {"$unwind":"$visit_motives.slots"},
+                        {"$match":{"visit_motives.slots":{"$gte":{"$date":"2022-01-26T00:00:00Z"}},"visit_motives.slots":{"$lt":{"$date":"2022-01-30T00:00:00Z"}}}},{"$group":{"_id":"$_id","nb":{"$sum":1}}}]')
+docto2
+```
+
+
+```{r include=FALSE}
+docto3<-as.data.frame(merge(docto,docto2,all.x=T))
+docto3$nb[is.na(docto3$nb)]<-0
+docto3
+
+
+docto3["col"]<-cases("red"=docto3$nb==0, 
+      "green"=docto3$nb>mean(docto3$nb[docto3$nb>0]),
+      "orange"=docto3$nb<=mean(docto3$nb[docto3$nb>0])
+          )
+docto3
+```
+
+
+
+
+```{r echo=FALSE}
+icons <- awesomeIcons(
+  icon = 'ios',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = docto3$col
+)
+
+leaflet(data = docto3) %>% addTiles() %>%
+  addAwesomeMarkers(~as.double(lat),~as.double(long), icon=icons, label=~paste("Il y  a",nb,"créneaux de libres"))%>%addCircles(
+                      lng = -1.6777,
+                      lat = 48.117266,radius=50000,color="green",opacity=0.3)
+```
+
+
+
+```{r include=FALSE}
+docto4<-coll$aggregate('[
+                        {"$unwind":"$visit_motives"},
+                        {"$unwind":"$visit_motives.slots"},
+                       {"$match":{"visit_motives.name":{"$regex":"1re"}}},
+                        {"$match":{"visit_motives.slots":{"$gte":{"$date":"2022-01-01T00:00:00Z"}},"visit_motives.slots":{"$lt":{"$date":"2022-06-02T00:00:00Z"}}}},{"$group":{"_id":"$_id","nb":{"$sum":1}}}]')
+docto4
+```
+
+```{r include=FALSE}
+docto5<-as.data.frame(merge(docto,docto4,all.x=T))
+docto5$nb[is.na(docto5$nb)]<-0
+docto5
+
+
+docto5["col"]<-cases("red"=docto5$nb==0, 
+      "green"=docto5$nb>mean(docto5$nb[docto5$nb>0]),
+      "orange"=docto5$nb<=mean(docto5$nb[docto5$nb>0])
+          )
+docto5
+```
+
+## Carte des centres de vaccination à moins de 50km de Rennes. Disponibilités des premières doses pour la période du 1 janvier 2022 au 1 juin 2022
+
+
+```{r echo=FALSE}
+icons <- awesomeIcons(
+  icon = 'ios',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = docto3$col
+)
+
+leaflet(data = docto5) %>% addTiles() %>%
+  addAwesomeMarkers(~as.double(lat),~as.double(long), icon=icons, label=~paste("Il y  a",nb,"créneaux de libres"))%>%addCircles(
+                      lng = -1.6777,
+                      lat = 48.117266,radius=50000,color="green",opacity=0.3)
+```
+
+
+##### Requêtes mongoDB pour réaliser cette carte :
+
+####Les centres de vaccination à 50km de rennes :
 
 Rennes = {"type": "Point","coordinates": [ -1.6777,48.117266]}
-db.dump_Jan2022.find(
-{"location" : {$near : {$geometry : Rennes,$maxDistance:50000}}})
+db.dump_Jan2022.find({"location" : {$near : {$geometry : Rennes,$maxDistance:50000}},$nor: [{ "visit_motives": {$size: 0}},{"visit_motives": {$exists: false}}]})
+
+####Le nombre de créneaux :
+
+db.dump_Jan2022.aggregate([{"$unwind":"$visit_motives"},
+{"$unwind":"$visit_motives.slots"},
+{"$match":{"visit_motives.slots":{"$gte":ISODate("2022-01-26T00:00:00Z")},"visit_motives.slots":{"$lt":ISODate("2022-01-30T00:00:00Z")}}},{"$group":{"_id":"$_id","nb":{"$sum":1}}}])
 
 
 
-db.dump_Jan2022.find({$or: [{ "visit_motives": {$size: 0}},
-                       {"visit_motives": {$exists: false}}]})
-					   
