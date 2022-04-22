@@ -60,7 +60,7 @@ docto3
 
 
 
-```{r echo=FALSE}
+```{r echo=FALSE ,fig.align="center"}
 icons <- awesomeIcons(
   icon = 'ios',
   iconColor = 'black',
@@ -101,7 +101,7 @@ docto5
 ## Carte des centres de vaccination à moins de 50km de Rennes. Disponibilités des premières doses pour la période du 1 janvier 2022 au 1 juin 2022
 
 
-```{r echo=FALSE}
+```{r echo=FALSE,fig.align="center"}
 icons <- awesomeIcons(
   icon = 'ios',
   iconColor = 'black',
@@ -116,18 +116,30 @@ leaflet(data = docto5) %>% addTiles() %>%
 ```
 
 
-##### Requêtes mongoDB pour réaliser cette carte :
+#### Requêtes mongoDB pour réaliser les cartes :
 
-####Les centres de vaccination à 50km de rennes :
+##### Les centres de vaccination à 50km de rennes :
 
 Rennes = {"type": "Point","coordinates": [ -1.6777,48.117266]}
-db.dump_Jan2022.find({"location" : {$near : {$geometry : Rennes,$maxDistance:50000}},$nor: [{ "visit_motives": {$size: 0}},{"visit_motives": {$exists: false}}]})
+db.dump_Jan2022.find({"location" : {\$near : {\$geometry : Rennes,\$maxDistance:50000}},\$nor: [{ "visit_motives": {\$size: 0}},{"visit_motives": {\$exists: false}}]})
 
-####Le nombre de créneaux :
+##### Le nombre de créneaux carte 1 :
 
-db.dump_Jan2022.aggregate([{"$unwind":"$visit_motives"},
-{"$unwind":"$visit_motives.slots"},
-{"$match":{"visit_motives.slots":{"$gte":ISODate("2022-01-26T00:00:00Z")},"visit_motives.slots":{"$lt":ISODate("2022-01-30T00:00:00Z")}}},{"$group":{"_id":"$_id","nb":{"$sum":1}}}])
+db.dump_Jan2022.aggregate([{\$unwind:"$visit_motives"},
+{\$unwind:"\$visit_motives.slots"},
+{\$match:{"visit_motives.slots":{"\$gte":ISODate("2022-01-26T00:00:00Z")},"visit_motives.slots":{"\$lt":ISODate("2022-01-30T00:00:00Z")}}},\$group:{"_id":"\$_id","nb":{"\$sum":1}}}])
+
+##### Le nombre de créneaux carte 2 :
+
+db.dump_Jan2022.aggregate([{\$unwind:"\$visit_motives"},
+{\$unwind:"$visit_motives.slots"},
+{\$match:{"visit_motives.name":/^1re/}},
+{\$match:{"visit_motives.slots":{"\$gte":ISODate("2022-01-01T00:00:00Z")},
+"visit_motives.slots":{"\$lt":ISODate("2022-06-02T00:00:00Z")}}},
+{\$group:{"_id":"\$_id","nb":{"\$sum":1}}}])
+
+
+
 
 
 
