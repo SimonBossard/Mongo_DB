@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "NYfood"
 output:
   html_document:
     df_print: paged
@@ -18,6 +18,7 @@ library(tidyverse)
 library(leaflet)
 library(leaflet.providers)
 library(htmltools)
+library(scales)
 ```
 
 ```{r include=FALSE}
@@ -27,36 +28,44 @@ coll<-mongo("NYfood",url=url1,options = ssl_options(allow_invalid_hostname=TRUE,
 
 
 ```{r include=FALSE}
-food<-coll$find(query = '{"grades":{"$size":1},"cuisine":"Asian","grades.grade":{"$not":{"$eq":"Not Yet Graded"}}}',fields='{"address":true,"cuisine":true,"grades.grade":true,"name":true}')
+food<-coll$find(query = '{"grades":{"$not":{"$eq":{"$size":0}}},"borough":"Manhattan","cuisine":"Asian","grades.grade":{"$not":{"$eq":"Not Yet Graded"}}}',fields='{"address":true,"name":true}')
 longlat<-as.character(food[,2][,2][,2])
 food["lat"]<-substr(longlat,3,12)
 food["lon"]<-str_replace(str_replace(substr(longlat,14,21),", ","")," ","")
-food["NOTE"]<-cbind(unlist(food$grades))
 
-food["col"]<-0
-food$col[food$NOTE=="A"]<-"green"
-food$col[food$NOTE=="B"]<-"yellow"
-food$col[food$NOTE=="C"]<-"orange"
-food$col[food$NOTE=="Z"]<-"red"
 food
 ```
 
+```{r include=FALSE, warning=FALSE}
+food2<-coll$aggregate('[
+{"$match":{"grades":{"$not":{"$eq":{"$size":0}}},"cuisine":"Asian","borough":"Manhattan","grades.grade":{"$not":{"$eq":"Not Yet Graded"}}}},
+{"$unwind":"$grades"},
+{"$group":{"_id": "$_id","score": {"$avg": "$grades.score"}}}
+]')
 
-## Les restaurants asiatiques de New York 
+food3<-merge(food,food2)
+```
 
 
 
-```{r echo=FALSE}
 
-icons <- awesomeIcons(
-  icon = 'ios',
-  iconColor = 'black',
-  library = 'ion',
-  markerColor = food$col
-)
 
-leaflet(data = food) %>% addTiles() %>%
-  addAwesomeMarkers(~as.double(lat),~as.double(lon), icon=icons, popup=~paste("Le nom est :", name))
+## Les restaurants asiatiques de Manhattan 
+
+Les notes sont décroissantes, plus la note est petite, meilleure le restaurant est. Les restaurants qui ont les meilleures notes sont en vert, ceux qui ont les moins bonnes sont en rouge. 
+
+
+
+
+```{r echo=FALSE, warning=FALSE}
+
+ColorPal2 <- colorNumeric(scales::seq_gradient_pal(low = "green", high = "red", 
+                                               space = "Lab"), domain = c(0,40))
+food3$col<-ColorPal2(food3$score)
+
+
+leaflet(data = food3) %>% addTiles() %>%
+  addCircleMarkers(~as.double(lat),~as.double(lon),popup=~paste("<p> <b>Nom :</b>", name,"</p>","<p> <b>Note : </b>", score,"</p>"  ),color=~col) %>% setView(lng = food3$lat[1], lat = food3$lon[1], zoom = 12)
 ```
 
 
