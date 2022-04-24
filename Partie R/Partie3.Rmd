@@ -28,8 +28,8 @@ coll<-mongo("dump_Jan2022",url=url1,options = ssl_options(allow_invalid_hostname
 
 ```{r include=FALSE}
 docto<-coll$find(query = '{"location" : {"$near" : {"$geometry" :  {"type": "Point","coordinates": [-1.6777,48.117266]},"$maxDistance":50000}},"$nor": [{ "visit_motives": {"$size": 0}},
-                       {"visit_motives": {"$exists": false}}]}',fields='{"_id":true,"name":true,"url_doctolib":true,"location":true,"visit_motives":true}')
-longlat<-as.character(docto[,4][,2])
+                       {"visit_motives": {"$exists": false}}]}',fields='{"_id":true,"location":true}')
+longlat<-as.character(docto[,2][,2])
 docto["lat"]<-substr(longlat,3,10)
 docto["long"]<-substr(longlat,13,18)
 docto
@@ -88,14 +88,10 @@ docto4
 ```{r include=FALSE}
 docto5<-as.data.frame(merge(docto,docto4,all.x=T))
 docto5$nb[is.na(docto5$nb)]<-0
-docto5
-
-
 docto5["col"]<-cases("red"=docto5$nb==0, 
       "green"=docto5$nb>mean(docto5$nb[docto5$nb>0]),
-      "orange"=docto5$nb<=mean(docto5$nb[docto5$nb>0])
-          )
-docto5
+      "orange"=docto5$nb<=mean(docto5$nb[docto5$nb>0]))
+
 ```
 
 ## Carte des centres de vaccination à moins de 50km de Rennes. Disponibilités des premières doses pour la période du 1 janvier 2022 au 1 juin 2022

@@ -1,0 +1,85 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r include=FALSE}
+library(mongolite)
+library(glue)
+library(jsonlite)
+library(memisc)
+library(ggplot2)
+library(ggmap)
+library(sf)
+library(tidyverse)
+library(leaflet)
+library(leaflet.providers)
+library(htmltools)
+```
+
+```{r include=FALSE}
+url1="mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/food"
+coll<-mongo("NYfood",url=url1,options = ssl_options(allow_invalid_hostname=TRUE, weak_cert_validation=TRUE))
+```
+
+
+```{r include=FALSE}
+food<-coll$find(query = '{"grades":{"$size":1},"cuisine":"Asian","grades.grade":{"$not":{"$eq":"Not Yet Graded"}}}',fields='{"address":true,"cuisine":true,"grades.grade":true,"name":true}')
+longlat<-as.character(food[,2][,2][,2])
+food["lat"]<-substr(longlat,3,12)
+food["lon"]<-str_replace(str_replace(substr(longlat,14,21),", ","")," ","")
+food["NOTE"]<-cbind(unlist(food$grades))
+
+food["col"]<-0
+food$col[food$NOTE=="A"]<-"green"
+food$col[food$NOTE=="B"]<-"yellow"
+food$col[food$NOTE=="C"]<-"orange"
+food$col[food$NOTE=="Z"]<-"red"
+food
+```
+
+
+## Les restaurants asiatiques de New York 
+
+
+
+```{r echo=FALSE}
+
+icons <- awesomeIcons(
+  icon = 'ios',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = food$col
+)
+
+leaflet(data = food) %>% addTiles() %>%
+  addAwesomeMarkers(~as.double(lat),~as.double(lon), icon=icons, popup=~paste("Le nom est :", name))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
