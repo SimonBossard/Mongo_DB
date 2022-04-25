@@ -27,8 +27,7 @@ coll<-mongo("dump_Jan2022",url=url1,options = ssl_options(allow_invalid_hostname
 
 
 ```{r include=FALSE}
-docto<-coll$find(query = '{"location" : {"$near" : {"$geometry" :  {"type": "Point","coordinates": [-1.6777,48.117266]},"$maxDistance":50000}},"$nor": [{ "visit_motives": {"$size": 0}},
-                       {"visit_motives": {"$exists": false}}]}',fields='{"_id":true,"location":true}')
+docto<-coll$find(query = '{"location" : {"$near" : {"$geometry" :  {"type": "Point","coordinates": [-1.6777,48.117266]},"$maxDistance":50000}}}',fields='{"_id":true,"location":true}')
 longlat<-as.character(docto[,2][,2])
 docto["lat"]<-substr(longlat,3,10)
 docto["long"]<-substr(longlat,13,18)
