@@ -53,7 +53,7 @@ food3<-merge(food,food2)
 ## Les restaurants asiatiques de Manhattan 
 
 Les notes sont décroissantes, plus la note est petite, meilleure le restaurant est. Les restaurants qui ont les meilleures notes sont en vert, ceux qui ont les moins bonnes sont en rouge. 
-
+Lorsque vous cliquez sur un restaurant, son nom et son score apparaissent.
 
 
 

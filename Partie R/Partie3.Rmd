@@ -93,7 +93,7 @@ docto5["col"]<-cases("red"=docto5$nb==0,
 
 ```
 
-## Carte des centres de vaccination à moins de 50km de Rennes. Disponibilités des premières doses pour la période du 1 janvier 2022 au 1 juin 2022
+## Carte des centres de vaccination à moins de 50km de Rennes. Disponibilités des premières doses pour la période du 1 janvier 2022 au 1 juin 2022.
 
 
 ```{r echo=FALSE,fig.align="center"}
