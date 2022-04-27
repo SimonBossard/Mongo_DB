@@ -1,0 +1,34 @@
+db.hal_irisa_2021.aggregate([
+                        {$unwind: "$authors"},
+                        {$group: {_id: null,
+                                  nb: {$sum:1}}}
+                      ])
+#nombre d'ecrivains
+
+
+db.hal_irisa_2021.aggregate([
+                        {$unwind: "$authors"},
+                        {$group: {_id: { name : "$authors.name",
+                                         firstname : "$authors.firstname"
+                            },
+                                  nb: {$sum:1}}}
+                      ])
+
+
+
+
+db.hal_irisa_2021.aggregate([
+                        {$unwind: "$authors"},
+                        {$group: {_id: "$authors.name"   ,nb: {$sum:1}}},
+                        {$sort: {"nb": -1}}
+                      ])
+db.hal_irisa_2021.aggregate([
+                        {$unwind: "$authors"},
+                        {$group: {_id: {name :"$authors.name", firstname :"$authors.firstname" }   ,nb: {$sum:1}}},
+                        {$sort: {"nb": -1}},
+                         {$limit: 20}
+                      ])
+#2300 autheurs unique
+
+
+db.hal_irisa_2021.find({"authors.name" : "Lefèvre","authors.firstname" : "Sébastien"},{"authors.name" :true,"authors.firstname" : true,"title" : true})

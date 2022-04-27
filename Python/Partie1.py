@@ -9,6 +9,9 @@
 
 from pickle import FALSE, TRUE
 from pymongo import MongoClient
+import pandas as pd 
+import networkx as nx 
+from matplotlib.pyplot import *
 
 db_uri = "mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/"
 client = MongoClient(db_uri, tls=True, tlsAllowInvalidCertificates=True)
@@ -36,6 +39,7 @@ top20 = list(
                       ])
 )
 
+
 #liste des noms
 liste_noms = []
 for i in range(0,len(top20)) :
@@ -60,6 +64,72 @@ for x,y in zip(liste_noms, liste_prenoms):
         liste_titre.append(i['title'])
         prenoms.append(y)
         noms.append(x)
+
+#on regroupe nom et prénoms
+prenom_nom = []
+for i in range(0, len(noms)):
+    prenom_nom.append(prenoms[i] +"_"+  noms[i])
+
+
+
+
+#on mets toutes les informations necassaires dans un dataframe
+data = {'prenom_nom':prenom_nom, 
+        'titre':liste_titre } 
+  
+df = pd.DataFrame(data) 
+
+
+grouped_df = df.groupby('titre').size()
+
+
+liste_commun = []
+for i in range(0, len(df)-1):
+    for j in range(i+1,len(df)) :
+        if (df['titre'][i] == df['titre'][j]) :
+            liste = []
+            liste.append(df['prenom_nom'][i])
+            liste.append(df['prenom_nom'][j])
+            liste_commun.append(liste)
+
+
+
+
+#compter nombre de liens
+data_lien = {'lien':liste_commun}
+data_lien = pd.DataFrame(data_lien) 
+data_lien.sum()
+
+nb_liens = []
+lien_vu = []
+for i in range(0,len(data_lien)-1):
+    cpt =0
+    if data_lien["lien"][i] not in lien_vu :
+        cpt += 1
+        lien_vu.append(data_lien["lien"][i])
+        for j in range(i+1,len(data_lien)):
+            if (data_lien["lien"][i] == data_lien["lien"][j]):
+                cpt += 1
+    if cpt != 0 :   
+        nb_liens.append(cpt)
+    
+
+
+print(nb_liens)
+
+
+
+
+#Partie graph
+
+figure(figsize=(10,5))
+G = nx.Graph()
+H = nx.Graph()
+H.add_nodes_from(prenom_nom)
+G.add_edges_from(liste_commun )
+I = nx.compose(H,G)
+nx.draw(I,with_labels= True, width=nb_liens)
+
 
 
 
