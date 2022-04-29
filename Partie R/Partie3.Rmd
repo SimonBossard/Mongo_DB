@@ -52,7 +52,7 @@ coll<-mongo("dump_Jan2022",url=url1,options = ssl_options(allow_invalid_hostname
 
 
 ## Carte des centres de vaccination à moins de 50km de Rennes
-Nous décider de garder les centres de vaccinations où il n'y avait aucun créneau de vaccination de libre. Afin de mieux visualiser les communes où il y a un veritable manque de vaccination.
+Nous avons décidé de garder les centres de vaccinations où il n'y avait aucun créneau de vaccination de libre. Afin de mieux visualiser les communes où il y a un veritable manque de vaccination.
 
 ```{r include=FALSE}
 docto<-coll$find(query = '{"location" : {"$near" : {"$geometry" :  {"type": "Point","coordinates": [-1.6777,48.117266]},"$maxDistance":50000}}}',fields='{"_id":true,"location":true}')
@@ -153,13 +153,13 @@ leaflet(data = docto5) %>% addTiles() %>%
 
 
 <center>
-<a href="NYFOOD.html" title="lien vers page2">
+<a href="NYFOOD.html" title="lien vers page 3">
 <img src="../flechegauche.jpg" alt="flechegauche" height="80"/>
 </a>
 <a href= "../index.html" title="lien vers home">
 <img src="../home.png" alt="home" height="100"/>
 </a>
-<a href="../Python/Partie1.html" title="lien vers page2">
+<a href="../Python/graphe.html" title="lien vers page 2">
 <img src="../flechedroite.jpg" alt="flechedroite" height="80"/>
 </a>
 </center>

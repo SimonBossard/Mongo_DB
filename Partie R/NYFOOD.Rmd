@@ -102,13 +102,13 @@ leaflet(data = food3) %>% addTiles() %>%
 </br>
 
 <center>
-<a href="../Python/Partie1.html" title="lien vers page2">
+<a href="../Python/graphe.html" title="lien vers page2">
 <img src="../flechegauche.jpg" alt="flechegauche" height="80"/>
 </a>
 <a href= "../index.html" title="lien vers home">
 <img src="../home.png" alt="home" height="100"/>
 </a>
-<a href="Partie3.html" title="lien vers page2">
+<a href="Partie3.html" title="lien vers page1">
 <img src="../flechedroite.jpg" alt="flechedroite" height="80"/>
 </a>
 </center>

@@ -7,11 +7,11 @@
 #git push origin mgaster
 
 
+
 from pickle import FALSE, TRUE
 from pymongo import MongoClient
 import pandas as pd 
 import networkx as nx 
-from matplotlib.pyplot import *
 
 db_uri = "mongodb+srv://etudiant:ur2@clusterm1.0rm7t.mongodb.net/"
 client = MongoClient(db_uri, tls=True, tlsAllowInvalidCertificates=True)
@@ -38,8 +38,7 @@ top20 = list(
                          {"$limit": 20}
                       ])
 )
-
-
+top20
 #liste des noms
 liste_noms = []
 for i in range(0,len(top20)) :
@@ -122,15 +121,47 @@ print(nb_liens)
 
 #Partie graph
 
+
+
+
+from matplotlib.pyplot import *
 figure(figsize=(10,5))
 G = nx.Graph()
 H = nx.Graph()
 H.add_nodes_from(prenom_nom)
 G.add_edges_from(liste_commun )
 I = nx.compose(H,G)
-nx.draw(I,with_labels= True, width=nb_liens)
+
+
+#couleur pour le nombre d'article
 
 
 
+#on recupere nombre publications :
+nombre_publi = []
+for i in range(0,len(top20)) :
+    nombre_publi.append(top20[i]['nb'])
 
+#on donne une couleur  correspondant à chaue nombre de publication
+node_color = []
+for i in range(0,len(nombre_publi)) :
+    if nombre_publi[i]>20 :
+        node_color.append('red')
+    elif 16>nombre_publi[i]>12 :
+        node_color.append("orange")
+    elif 13>nombre_publi[i]>10 :
+        node_color.append("yellow")
+    else :
+        node_color.append("green")
+
+nx.draw(I,with_labels= True, width=nb_liens, node_color = node_color,font_size = 7)
+
+
+
+import matplotlib.pyplot as plt
+figure(figsize=(25,10))
+pos = nx.spring_layout(I,k=0.25,iterations=5,scale = 0.2)
+nx.draw(I,pos ,with_labels= True, width=nb_liens, node_color = node_color,font_size = 29,node_size = 550)
+
+plt.savefig("graph.png")
 
